@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advice Trang Smart Service — Staff Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#081B32; --navy2:#0E2A4D; --blue:#2F6BFF; --blue-deep:#1948D6; --sky:#EBF2FF; --cyan:#00C2D1;
+  --ink:#10233F; --muted:#5C7089; --line:#E3EAF5; --paper:#FFFFFF; --bg:#F6F9FE;
+  --ok:#16A34A; --ok-bg:#E9F9EF; --warn:#D98A0B; --warn-bg:#FDF3E2; --info:#2F6BFF; --info-bg:#EBF2FF;
+  --other:#B8590C; --other-bg:#FCEEE1; --danger:#DC2626; --danger-bg:#FDEBEB;
+  --gold:#C9A227; --gold-deep:#9C7D15; --gold-bg:#FBF3DC;
+  --shadow:0 10px 30px rgba(10,37,64,.09), 0 2px 6px rgba(10,37,64,.06);
+  --shadow-lg:0 24px 60px rgba(8,27,50,.22);
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:'IBM Plex Sans Thai','Kanit',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+h1,h2,h3,h4{font-family:'Kanit','IBM Plex Sans Thai',sans-serif;}
+button{font-family:inherit;cursor:pointer;}
+img{display:block;object-fit:cover;}
+
+.conn-strip{background:var(--navy);color:#9db6dd;font-size:11.5px;text-align:center;padding:6px 14px;}
+.conn-strip b{color:#7fd8e0;}
+
+/* login */
+.login-wrap{min-height:calc(100vh - 33px);display:flex;align-items:stretch;}
+.login-visual{flex:1.1;position:relative;overflow:hidden;display:none;}
+.login-visual img{width:100%;height:100%;object-fit:cover;filter:saturate(1.05);}
+.login-visual .scrim{position:absolute;inset:0;background:linear-gradient(190deg,rgba(6,16,34,.35),rgba(6,16,34,.92));}
+.login-visual .content{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:50px;color:#fff;}
+.login-visual .content h2{font-size:26px;margin:0 0 10px;line-height:1.35;}
+.login-visual .content p{font-size:13px;color:#c9d9f2;max-width:380px;line-height:1.7;}
+.login-form-side{flex:1;display:flex;align-items:center;justify-content:center;padding:40px;background:var(--bg);}
+.login-card{width:380px;max-width:100%;}
+.login-card .lb{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--navy),var(--blue));display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Kanit';font-weight:800;margin-bottom:18px;box-shadow:var(--shadow-lg);}
+.login-card h3{margin:0 0 4px;font-size:21px;color:var(--navy);}
+.login-card p{font-size:12.5px;color:var(--muted);margin:0 0 26px;}
+.field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600;}
+.field input,.field select,.field textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:11px;font-size:13.5px;font-family:inherit;background:#fbfdff;color:var(--ink);}
+.field input:focus{outline:none;border-color:var(--blue);background:#fff;}
+.login-hint{background:var(--gold-bg);border:1px solid #e8d488;border-radius:11px;padding:11px 14px;font-size:11.5px;color:#6b551a;margin-top:18px;line-height:1.65;}
+.err-text{color:var(--danger);font-size:12px;margin-top:8px;display:none;}
+.btn-primary-lg{width:100%;margin-top:16px;padding:13px;background:linear-gradient(120deg,var(--navy),var(--blue-deep));color:#fff;border:none;border-radius:12px;font-weight:700;font-size:14px;box-shadow:0 10px 24px rgba(25,72,214,.28);}
+
+/* shell */
+.shell{display:grid;grid-template-columns:246px 1fr;min-height:calc(100vh - 33px);}
+.sidebar{background:linear-gradient(180deg,var(--navy),#0a2140);color:#cfe0fb;padding:22px 15px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.s-brand{display:flex;align-items:center;gap:11px;padding:6px 8px 22px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:15px;}
+.s-brand .bb{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-weight:800;font-family:'Kanit';font-size:14px;color:#fff;}
+.s-brand .bt{font-size:13.5px;font-weight:700;color:#fff;font-family:'Kanit';line-height:1.2;}
+.s-brand .bs{font-size:10px;color:#8fa8cc;}
+.s-nav{display:flex;flex-direction:column;gap:2px;flex:1;}
+.s-nav button{display:flex;align-items:center;gap:10px;background:none;border:none;color:#b9cbe8;padding:10px 12px;border-radius:10px;font-size:13px;text-align:left;font-weight:500;position:relative;}
+.s-nav button .ic{width:18px;text-align:center;}
+.s-nav button:hover{background:rgba(255,255,255,.06);color:#fff;}
+.s-nav button.active{background:linear-gradient(120deg,var(--blue-deep),var(--blue));color:#fff;box-shadow:0 6px 16px rgba(47,107,255,.28);}
+.s-nav .grp{font-size:10px;letter-spacing:.6px;color:#5f7aa3;padding:14px 12px 4px;}
+.qbadge{margin-left:auto;background:var(--danger);color:#fff;font-size:10px;font-weight:800;padding:1px 7px;border-radius:20px;}
+.s-user{border-top:1px solid rgba(255,255,255,.1);padding-top:14px;margin-top:10px;display:flex;align-items:center;gap:9px;}
+.s-user .av{width:34px;height:34px;border-radius:50%;overflow:hidden;border:2px solid var(--gold);}
+.s-user .av img{width:100%;height:100%;}
+.s-user .nm{font-size:12.5px;color:#fff;font-weight:700;}
+.s-user .rl{font-size:10.5px;color:#8fa8cc;}
+.s-user .out{margin-left:auto;background:rgba(255,255,255,.08);border:none;color:#cfe0fb;width:28px;height:28px;border-radius:8px;font-size:12px;}
+
+.main{padding:28px 32px 60px;overflow-x:hidden;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.topbar h2{margin:0;font-size:22px;color:var(--navy);}
+.topbar .sub{font-size:12.5px;color:var(--muted);margin-top:3px;}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:26px;}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;position:relative;overflow:hidden;box-shadow:var(--shadow);}
+.kpi .k-ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:11px;}
+.kpi .k-val{font-family:'Kanit';font-size:25px;font-weight:800;color:var(--navy);}
+.kpi .k-lb{font-size:11.5px;color:var(--muted);margin-top:2px;}
+
+.grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:24px;}
+.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow);}
+.panel h4{margin:0 0 15px;font-size:14.5px;color:var(--navy);display:flex;justify-content:space-between;align-items:center;}
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:140px;padding-top:10px;}
+.bar-chart .bar{flex:1;background:linear-gradient(180deg,var(--cyan),var(--blue));border-radius:6px 6px 0 0;position:relative;min-height:4px;}
+.bar-chart .bar.peak{background:linear-gradient(180deg,#ffb648,var(--warn));}
+.bar-chart-labels{display:flex;gap:6px;margin-top:7px;}
+.bar-chart-labels span{flex:1;text-align:center;font-size:9.5px;color:var(--muted);}
+
+.table{width:100%;border-collapse:collapse;font-size:12.8px;}
+.table th{text-align:left;padding:11px 11px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--line);font-size:11px;text-transform:uppercase;letter-spacing:.3px;}
+.table td{padding:12px 11px;border-bottom:1px solid #eef3fb;color:var(--ink);vertical-align:middle;}
+.table tr:hover td{background:#fbfdff;}
+.mini-badge{font-size:10.5px;padding:4px 10px;border-radius:20px;font-weight:700;}
+.prod-thumb{width:40px;height:40px;border-radius:9px;object-fit:cover;}
+
+.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:10px;flex-wrap:wrap;}
+.search-box{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 14px;min-width:260px;}
+.search-box input{border:none;outline:none;font-size:13px;flex:1;font-family:inherit;}
+.btn{background:linear-gradient(120deg,var(--navy),var(--blue-deep));color:#fff;border:none;padding:11px 18px;border-radius:11px;font-weight:700;font-size:12.8px;}
+.btn.secondary{background:#fff;color:var(--ink);border:1px solid var(--line);}
+.icon-sm{background:var(--sky);border:none;width:30px;height:30px;border-radius:8px;font-size:12px;color:var(--blue-deep);}
+.icon-sm.del{background:var(--danger-bg);color:var(--danger);}
+.row-actions{display:flex;gap:6px;}
+.status-select{border:1px solid var(--line);border-radius:9px;padding:5px 8px;font-size:11.5px;font-family:inherit;}
+
+.status-pulse-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:24px;}
+.pulse-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow);}
+.pulse-card .pv{font-family:'Kanit';font-size:21px;font-weight:800;color:var(--navy);}
+.pulse-card .pl{font-size:11px;color:var(--muted);margin-top:2px;}
+.pulse-card .pbar{height:6px;background:#eef3fb;border-radius:4px;margin-top:11px;overflow:hidden;}
+.pulse-card .pbar i{display:block;height:100%;background:var(--blue);border-radius:4px;}
+
+/* live chat */
+.chat-queue-list{display:flex;flex-direction:column;gap:10px;}
+.cq-item{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:#fff;transition:.15s;}
+.cq-item.queued{border-color:#f3ddab;background:var(--gold-bg);}
+.cq-item.active{border-color:#b9d2f5;}
+.cq-head{display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+.cq-head .nm{font-weight:700;font-size:13px;color:var(--navy);}
+.cq-head .meta{font-size:11px;color:var(--muted);}
+.cq-thread{display:none;margin-top:14px;border-top:1px dashed var(--line);padding-top:14px;}
+.cq-item.open .cq-thread{display:block;}
+.cq-messages{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;padding:4px 2px;margin-bottom:12px;}
+.cq-msg{max-width:78%;padding:9px 12px;border-radius:12px;font-size:12.5px;line-height:1.5;}
+.cq-msg.customer{background:var(--sky);align-self:flex-start;}
+.cq-msg.staff{background:linear-gradient(120deg,var(--navy),var(--blue-deep));color:#fff;align-self:flex-end;}
+.cq-msg.system{align-self:center;color:var(--muted);font-size:11px;background:transparent;}
+.cq-reply{display:flex;gap:8px;}
+.cq-reply input{flex:1;padding:10px 13px;border:1px solid var(--line);border-radius:10px;font-size:12.8px;font-family:inherit;}
+.cq-reply button{background:var(--blue);color:#fff;border:none;padding:0 16px;border-radius:10px;font-weight:700;font-size:12px;}
+.cq-actions{display:flex;gap:8px;margin-top:10px;}
+
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:13px 24px;border-radius:13px;font-size:13px;z-index:200;box-shadow:0 12px 32px rgba(0,0,0,.28);}
+.overlay{position:fixed;inset:0;background:rgba(6,15,30,.55);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;backdrop-filter:blur(3px);}
+.modal{background:#fff;border-radius:22px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 34px 70px rgba(0,0,0,.3);}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:22px 26px;border-bottom:1px solid var(--line);}
+.modal-head h3{margin:0;font-size:17px;color:var(--navy);}
+.modal-close{background:var(--sky);border:none;width:32px;height:32px;border-radius:9px;font-size:14px;color:var(--muted);}
+.modal-body{padding:24px 26px;}
+.modal-foot{padding:17px 26px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;}
+
+@media(max-width:980px){
+  .shell{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .status-pulse-grid{grid-template-columns:repeat(2,1fr);}
+  .grid2{grid-template-columns:1fr;}
+  .login-visual{display:none;}
+}
+</style>
+</head>
+<body>
+<div class="conn-strip">🔗 ระบบหลังบ้านพนักงาน — เชื่อมข้อมูลแบบเรียลไทม์กับ <b>ระบบหน้าบ้านลูกค้า (customer.html)</b> — เปิดทั้งสองไฟล์จากโฟลเดอร์เดียวกันด้วย Chrome/Edge เพื่อให้ข้อมูลซิงก์กัน</div>
+<div id="root"></div>
+
+<script>
+const CATS = [
+  {k:'notebook',lb:'คอมพิวเตอร์/โน้ตบุ๊ก',kw:'laptop'},{k:'phone',lb:'โทรศัพท์/แท็บเล็ต',kw:'smartphone'},{k:'accessory',lb:'อุปกรณ์เสริม',kw:'computer-accessories'},
+  {k:'monitor',lb:'จอภาพ',kw:'computer-monitor'},{k:'gaming',lb:'อุปกรณ์ Gaming',kw:'gaming-setup'},{k:'printer',lb:'Printer',kw:'printer'},
+  {k:'network',lb:'Network',kw:'wifi-router'},{k:'storage',lb:'Storage',kw:'hard-drive'},{k:'other',lb:'อื่น ๆ',kw:'electronics'},
+];
+const STATUS_META = {
+  instock:{label:'มีสินค้าที่สาขาตรัง',dot:'🟢',cls:'st-instock'},
+  incoming:{label:'กำลังจัดส่งมายังสาขาตรัง',dot:'🟡',cls:'st-incoming'},
+  main:{label:'มีสินค้าที่บริษัทหลัก',dot:'🔵',cls:'st-main'},
+  other:{label:'มีสินค้าที่สาขาอื่น',dot:'🟠',cls:'st-other'},
+  out:{label:'สินค้าหมด',dot:'🔴',cls:'st-out'},
+};
+const STMAP = {instock:'#E9F9EF',incoming:'#FDF3E2',main:'#EBF2FF',other:'#FCEEE1',out:'#FDEBEB'};
+const STCOLOR = {instock:'#16A34A',incoming:'#D98A0B',main:'#2F6BFF',other:'#B8590C',out:'#DC2626'};
+const PRODUCT_KEYWORDS = {
+  'NB-AS001':'laptop-computer','NB-LN002':'laptop','NB-AC003':'gaming-laptop',
+  'PH-SM004':'smartphone','PH-XM005':'smartphone-phone','TB-IP006':'tablet-ipad',
+  'AC-LG007':'computer-mouse','AC-KB008':'mechanical-keyboard','MN-DL009':'computer-monitor',
+  'MN-SM010':'gaming-monitor','GM-RZ011':'gaming-mouse','GM-HS012':'gaming-headset',
+  'PR-EP013':'printer','PR-CN014':'office-printer','NW-TL015':'wifi-router',
+  'ST-SS016':'ssd-drive','ST-WD017':'external-harddrive','AC-CB018':'power-bank',
+  'MN-VW019':'computer-monitor','OT-UP020':'power-supply',
+};
+const PRODUCT_IMAGES = {
+  // Product photos from manufacturer/store product listings (direct image URLs)
+  'NB-AS001':'https://m.media-amazon.com/images/I/71ovxIPny7L._AC_SL1500_.jpg',
+  'NB-LN002':'https://m.media-amazon.com/images/I/719C6bJv8jL._AC_UL320_.jpg',
+  'NB-AC003':'https://mediamart.vn/images/mediamart/2024/09/12/laptop-acer-aspire-7-gaming-a715-59g-73lb.jpg',
+  'PH-SM004':'https://commons.wikimedia.org/wiki/Special:FilePath/Samsung_Galaxy_A55_5G_2024.jpg',
+  'PH-XM005':'https://m.media-amazon.com/images/I/71dTMX1+OBL.jpg',
+  'TB-IP006':'https://www.apple.com/v/ipad-10.9/b/images/overview/hero/hero__ecv967j0d5e6_large.png',
+  'AC-LG007':'https://www.logitech.com/content/dam/logitech/en/products/mice/mx-master-3s-wireless-mouse/mx-master-3s-top-view-black.png',
+  'AC-KB008':'https://m.media-amazon.com/images/I/71qJ9pQKS2L._AC_SL1500_.jpg',
+  'MN-DL009':'https://i.dell.com/is/image/DellContent//content/dam/ss2/product-images/peripherals/monitors/s-series/s2421hn/media-gallery/monitor-s2421hn-gallery-1.psd?fmt=png-alpha&pscan=auto&scl=1&wid=800&hei=800&qlt=100,1&resMode=sharp2&size=800,800',
+  'MN-SM010':'https://media.ldlc.com/r1600/ld/products/00/06/09/06/66/87/SCG552_0001.jpg',
+  'GM-RZ011':'https://m.media-amazon.com/images/I/71SfcN143LL._AC_SL1500_.jpg',
+  'GM-HS012':'https://m.media-amazon.com/images/I/71mK8D3Q8pL._AC_SL1500_.jpg',
+  'ST-SS016':'https://m.media-amazon.com/images/I/81BIRmPUAgL._AC_SL1500_.jpg',
+};
+function hashCode(str){
+  let hash = 0;
+  str = String(str ?? '');
+  for(let i = 0; i < str.length; i++){
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function pimg(keyword, width=800, height=500){
+  const q = encodeURIComponent(String(keyword || 'technology').replace(/-/g,' '));
+  return `https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=${width}&h=${height}&q=80`;
+}
+
+function limg(keyword, width=500, height=400, seed=1){
+  const key = encodeURIComponent(`${String(keyword || 'technology')}-${seed}`);
+  return `https://picsum.photos/seed/${key}/${width}/${height}`;
+}
+
+function productImg(code,category){ return PRODUCT_IMAGES[code] || limg(PRODUCT_KEYWORDS[code]||CATS.find(c=>c.k===category)?.kw||'electronics', 500,400, hashCode(code)); }
+
+function seedProducts(){
+  const names = [
+    ['NB-AS001','ASUS Vivobook 15 X1504','notebook',18990],['NB-LN002','Lenovo IdeaPad Slim 3','notebook',15490],
+    ['NB-AC003','Acer Aspire 7 Gaming','notebook',24990],['PH-SM004','Samsung Galaxy A55 5G','phone',11990],
+    ['PH-XM005','Xiaomi Redmi Note 13','phone',6490],['TB-IP006','iPad 10th Gen Wi-Fi','phone',13900],
+    ['AC-LG007','Logitech MX Master 3S','accessory',3290],['AC-KB008','Keychron K8 Mechanical','accessory',2590],
+    ['MN-DL009','Dell 24" IPS FHD Monitor','monitor',3990],['MN-SM010','Samsung Odyssey G5 27"','monitor',6990],
+    ['GM-RZ011','Razer DeathAdder V3','gaming',1490],['GM-HS012','HyperX Cloud II Headset','gaming',2190],
+    ['PR-EP013','Epson L3250 All-in-One','printer',5990],['PR-CN014','Canon PIXMA G2010','printer',4290],
+    ['NW-TL015','TP-Link Archer AX23','network',1690],['ST-SS016','Samsung SSD 970 Evo 1TB','storage',2990],
+    ['ST-WD017','WD My Passport 2TB','storage',2390],['AC-CB018','Anker PowerCore 20000mAh','accessory',1290],
+    ['MN-VW019','ViewSonic 27" 165Hz','monitor',7490],['OT-UP020','UPS APC 650VA','other',1990],
+  ];
+  const statuses = ['instock','instock','incoming','main','other','instock','out','main','instock','incoming'];
+  return names.map((n,i)=>({
+    id:'P'+(i+1).toString().padStart(3,'0'), code:n[0], name:n[1], category:n[2], price:n[3],
+    image: productImg(n[0],n[2]), status: statuses[i%statuses.length],
+    stock: statuses[i%statuses.length]==='instock' ? (3+(i%6)) : 0,
+    location: 'ชั้น '+(1+(i%3))+' โซน '+String.fromCharCode(65+(i%4)),
+  }));
+}
+const DEFAULTS = {
+  products: seedProducts(), reservations: [], checkRequests: [], tickets: [], chatlogs: [], errorlogs: [
+    {id:'ERR-0001', time:'2026-08-24 17:42', user:'guest_2291', page:'ตรวจสอบสินค้า', type:'Timeout', detail:'API สต็อกตอบสนองช้าเกิน 8s', status:'แก้ไขแล้ว'},
+    {id:'ERR-0002', time:'2026-08-25 18:05', user:'guest_5510', page:'ตะกร้าสินค้า', type:'500 Error', detail:'บันทึกคำสั่งซื้อไม่สำเร็จ', status:'กำลังตรวจสอบ'},
+  ], orders: [], chatSessions: [],
+  systemStatus: {level:'ok', users: 47, requests: 312, errors: 2, resp: 180},
+};
+const KEY='advice_trang_v1';
+let DB=null;
+function loadDBSync(){
+  let raw = null;
+  try{
+    raw = localStorage.getItem(KEY);
+    DB = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULTS));
+  }catch(e){ DB = JSON.parse(JSON.stringify(DEFAULTS)); }
+  DB.products=(DB.products||[]).map(p=> p.image && p.image.includes('loremflickr') ? p : {...p,image:productImg(p.code,p.category)});
+  DB.orders=DB.orders||[]; DB.chatSessions=DB.chatSessions||[];
+  DB.reservations=DB.reservations||[]; DB.checkRequests=DB.checkRequests||[]; DB.tickets=DB.tickets||[];
+  DB.chatlogs=DB.chatlogs||[]; DB.errorlogs=DB.errorlogs||[];
+  if(!raw) saveDBSync();
+}
+function saveDBSync(){ try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(e){ console.error('save failed',e); } }
+async function loadDB(){ loadDBSync(); }
+async function saveDB(){ saveDBSync(); }
+function fmt(n){ return Number(n).toLocaleString('th-TH'); }
+function uid(p){ return p+'-'+Math.random().toString(36).slice(2,7).toUpperCase(); }
+function nowTime(){ const d=new Date(); return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); }
+
+// real-time sync across the two separate HTML files (same browser, same folder / origin)
+window.addEventListener('storage', (e)=>{ if(e.key===KEY){ loadDBSync(); render(); } });
+
+let loggedIn=false;
+let admin = { page:'dashboard', productSearch:'', editingProduct:null, showProductModal:false, openChatId:null };
+function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2600); }
+
+function render(){
+  document.getElementById('root').innerHTML = loggedIn ? renderShell() : renderLogin();
+  bindEvents();
+  if(loggedIn) updateQueueBadge();
+}
+
+function renderLogin(){
+  return `
+  <div class="login-wrap">
+    <div class="login-visual">
+      <img src="${pimg('modern-office-workspace',900,1100)}" alt="">
+      <div class="scrim"></div>
+      <div class="content">
+        <h2>ศูนย์ควบคุมสาขา<br/>Advice Trang Smart Service</h2>
+        <p>บริหารสินค้า คำสั่งซื้อ การจอง และแชทลูกค้าแบบเรียลไทม์ — ข้อมูลเชื่อมต่อกับหน้าเว็บลูกค้าโดยตรง</p>
+      </div>
+    </div>
+    <div class="login-form-side">
+      <div class="login-card">
+        <div class="lb">AT</div>
+        <h3>เข้าสู่ระบบหลังบ้าน</h3>
+        <p>สำหรับพนักงาน / ผู้จัดการสาขา / ผู้ดูแลระบบ Advice สาขาตรัง</p>
+        <form id="loginForm">
+          <div class="field" style="margin-bottom:14px;"><label>ชื่อผู้ใช้งาน</label><input name="user" value="admin" required></div>
+          <div class="field"><label>รหัสผ่าน</label><input name="pass" type="password" value="admin123" required></div>
+          <div class="err-text" id="loginErr">ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง</div>
+          <button class="btn-primary-lg" type="submit">เข้าสู่ระบบ</button>
+        </form>
+        <div class="login-hint">🔐 ตัวอย่างระบบ: user <b>admin</b> / pass <b>admin123</b><br>ข้อมูลสินค้า/การจอง/คำสั่งซื้อ/แชท เชื่อมกับหน้าบ้านลูกค้าแบบเรียลไทม์</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderShell(){
+  const queued = DB.chatSessions.filter(s=>s.status==='queued').length;
+  const menu = [
+    {grp:'ภาพรวม'},{k:'dashboard',ic:'📊',l:'Dashboard'},
+    {grp:'สินค้า & คำสั่งซื้อ'},{k:'products',ic:'📦',l:'สินค้า'},{k:'orders',ic:'🧾',l:'คำสั่งซื้อ'},
+    {k:'reservations',ic:'📌',l:'รายการจอง'},{k:'checks',ic:'🔎',l:'คำขอตรวจสอบสินค้า'},
+    {grp:'ลูกค้าสัมพันธ์'},{k:'livechat',ic:'💬',l:'แชทสด',badge:queued},{k:'tickets',ic:'📨',l:'คำร้องลูกค้า'},{k:'chatbot',ic:'🤖',l:'ประวัติ Chatbot'},
+    {grp:'ระบบ'},{k:'monitoring',ic:'🖥️',l:'System Monitoring'},{k:'errorlog',ic:'🪵',l:'Error Log'},{k:'settings',ic:'⚙️',l:'ตั้งค่าระบบ'},
+  ];
+  let body='';
+  if(admin.page==='dashboard') body=pageDashboard();
+  else if(admin.page==='products') body=pageProducts();
+  else if(admin.page==='orders') body=pageOrders();
+  else if(admin.page==='reservations') body=pageReservations();
+  else if(admin.page==='checks') body=pageChecks();
+  else if(admin.page==='livechat') body=pageLiveChat();
+  else if(admin.page==='tickets') body=pageTickets();
+  else if(admin.page==='chatbot') body=pageChatbot();
+  else if(admin.page==='monitoring') body=pageMonitoring();
+  else if(admin.page==='errorlog') body=pageErrorlog();
+  else if(admin.page==='settings') body=pageSettings();
+
+  return `
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="s-brand"><div class="bb">AT</div><div><div class="bt">Advice Trang</div><div class="bs">Staff Console</div></div></div>
+      <nav class="s-nav">${menu.map(m=> m.grp?`<div class="grp">${m.grp}</div>`:`<button data-apage="${m.k}" class="${admin.page===m.k?'active':''}"><span class="ic">${m.ic}</span>${m.l}${m.badge?`<span class="qbadge">${m.badge}</span>`:''}</button>`).join('')}</nav>
+      <div class="s-user"><div class="av"><img src="${limg('business-person-portrait',80,80,42)}"></div><div><div class="nm">พนักงานสาขาตรัง</div><div class="rl">Staff</div></div><button class="out" id="logoutBtn" title="ออกจากระบบ">⎋</button></div>
+    </aside>
+    <main class="main">${body}</main>
+  </div>
+  ${admin.showProductModal?productEditModal():''}
+  `;
+}
+
+function kpi(ic,val,lb,bg,fg){ return `<div class="kpi"><div class="k-ic" style="background:${bg};color:${fg};">${ic}</div><div class="k-val">${val}</div><div class="k-lb">${lb}</div></div>`; }
+function resBadge(s){ const map={'รอตรวจสอบ':'st-incoming','ยืนยันการจอง':'st-main','เตรียมสินค้า':'st-other','พร้อมรับสินค้า':'st-instock','รับสินค้าแล้ว':'st-instock','รอดำเนินการ':'st-incoming','กำลังเตรียมสินค้า':'st-main','จัดส่งแล้ว':'st-instock'};
+  return `<span class="mini-badge" style="background:${STMAP[{'st-incoming':'incoming','st-main':'main','st-other':'other','st-instock':'instock'}[map[s]]||'incoming']};color:${STCOLOR[{'st-incoming':'incoming','st-main':'main','st-other':'other','st-instock':'instock'}[map[s]]||'incoming']}">${s}</span>`; }
+
+function pageDashboard(){
+  const lowStock = DB.products.filter(p=>p.status==='instock'&&p.stock<=2);
+  const incoming = DB.products.filter(p=>p.status==='incoming');
+  const hours=['10','11','12','13','14','15','16','17','18','19','20'];
+  const loads=[20,26,30,42,38,55,72,88,95,80,44];
+  return `
+  <div class="topbar"><div><h2>Dashboard ภาพรวมสาขา</h2><div class="sub">Advice สาขาตรัง · อัปเดตล่าสุดวันนี้</div></div>
+    <button class="btn secondary" data-apage="monitoring">ดู System Monitoring →</button></div>
+  <div class="kpi-grid">
+    ${kpi('🧾',DB.orders.length,'คำสั่งซื้อทั้งหมด','var(--info-bg)','var(--info)')}
+    ${kpi('📌',DB.reservations.length,'จำนวนการจอง','var(--ok-bg)','var(--ok)')}
+    ${kpi('💬',DB.chatSessions.filter(s=>s.status==='queued').length,'แชทรอในคิว','var(--gold-bg)','var(--gold-deep)')}
+    ${kpi('🔎',DB.checkRequests.length,'คำขอตรวจสอบสินค้า','var(--other-bg)','var(--other)')}
+  </div>
+  <div class="grid2">
+    <div class="panel"><h4>ปริมาณการใช้งานเว็บไซต์ตามช่วงเวลา (เน้น 16:00–20:00)</h4>
+      <div class="bar-chart">${loads.map(v=>`<div class="bar ${v>=70?'peak':''}" style="height:${v}%"></div>`).join('')}</div>
+      <div class="bar-chart-labels">${hours.map(h=>`<span>${h}:00</span>`).join('')}</div></div>
+    <div class="panel"><h4>สถานะที่ต้องติดตาม</h4>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="table" style="display:flex;justify-content:space-between;padding:9px 0;font-size:12.5px;"><span>🟠 สินค้าใกล้หมด</span><span class="mini-badge" style="background:${STMAP.incoming};color:${STCOLOR.incoming}">${lowStock.length} รายการ</span></div>
+        <div class="table" style="display:flex;justify-content:space-between;padding:9px 0;font-size:12.5px;"><span>🚚 สินค้ากำลังจัดส่งมาสาขา</span><span class="mini-badge" style="background:${STMAP.main};color:${STCOLOR.main}">${incoming.length} รายการ</span></div>
+        <div class="table" style="display:flex;justify-content:space-between;padding:9px 0;font-size:12.5px;"><span>📨 คำร้องที่รอเจ้าหน้าที่</span><span class="mini-badge" style="background:${STMAP.out};color:${STCOLOR.out}">${DB.tickets.filter(t=>t.status==='รอดำเนินการ').length} รายการ</span></div>
+        <div class="table" style="display:flex;justify-content:space-between;padding:9px 0;font-size:12.5px;"><span>💬 แชทรอในคิว</span><span class="mini-badge" style="background:${STMAP.out};color:${STCOLOR.out}">${DB.chatSessions.filter(s=>s.status==='queued').length} รายการ</span></div>
+      </div></div>
+  </div>
+  <div class="panel"><h4>คำสั่งซื้อล่าสุด <span style="font-size:12px;cursor:pointer;color:var(--blue);" data-apage="orders">ดูทั้งหมด →</span></h4>
+    <table class="table"><thead><tr><th>รหัสคำสั่งซื้อ</th><th>รายการ</th><th>ยอดรวม</th><th>วันที่</th><th>สถานะ</th></tr></thead>
+    <tbody>${DB.orders.slice(-5).reverse().map(o=>`<tr><td>${o.id}</td><td>${o.items.map(i=>i.name).join(', ')}</td><td>฿${fmt(o.total)}</td><td>${o.created}</td><td>${resBadge(o.status)}</td></tr>`).join('') || `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">ยังไม่มีคำสั่งซื้อ</td></tr>`}</tbody></table></div>
+  `;
+}
+
+function pageProducts(){
+  let list=DB.products; if(admin.productSearch) list=list.filter(p=>(p.name+p.code).toLowerCase().includes(admin.productSearch.toLowerCase()));
+  return `
+  <div class="topbar"><div><h2>จัดการสินค้า</h2><div class="sub">เพิ่ม/แก้ไข/ลบสินค้า และอัปเดตสถานะ — แสดงผลฝั่งลูกค้าทันที</div></div><button class="btn" id="addProductBtn">+ เพิ่มสินค้าใหม่</button></div>
+  <div class="toolbar"><div class="search-box">🔎<input id="prodSearch" placeholder="ค้นหาชื่อ/รหัสสินค้า..." value="${admin.productSearch}"></div><div class="sub">ทั้งหมด ${list.length} รายการ</div></div>
+  <div class="panel" style="padding:0;overflow-x:auto;"><table class="table" style="min-width:860px;">
+    <thead><tr><th></th><th>รหัส</th><th>ชื่อสินค้า</th><th>หมวดหมู่</th><th>ราคา</th><th>คงเหลือ</th><th>สถานะ</th><th></th></tr></thead>
+    <tbody>${list.map(p=>`<tr>
+      <td><img class="prod-thumb" src="${p.image}"></td><td>${p.code}</td><td>${p.name}</td><td>${CATS.find(c=>c.k===p.category)?.lb||''}</td>
+      <td>฿${fmt(p.price)}</td><td>${p.stock}</td>
+      <td><select class="status-select statusSelect" data-id="${p.id}">${Object.entries(STATUS_META).map(([k,v])=>`<option value="${k}" ${p.status===k?'selected':''}>${v.dot} ${v.label}</option>`).join('')}</select></td>
+      <td><div class="row-actions"><button class="icon-sm" data-editprod="${p.id}">✎</button><button class="icon-sm del" data-delprod="${p.id}">🗑</button></div></td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+
+function productEditModal(){
+  const p = admin.editingProduct;
+  return `<div class="overlay"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head"><h3>${p?'แก้ไขสินค้า':'เพิ่มสินค้าใหม่'}</h3><button class="modal-close" id="closeProdModal">✕</button></div>
+    <div class="modal-body"><form id="prodForm"><div class="form-grid">
+      <div class="field"><label>รหัสสินค้า</label><input name="code" value="${p?p.code:''}" required></div>
+      <div class="field"><label>ราคา (บาท)</label><input name="price" type="number" value="${p?p.price:''}" required></div>
+      <div class="field" style="grid-column:1/-1;"><label>ชื่อสินค้า</label><input name="name" value="${p?p.name:''}" required></div>
+      <div class="field"><label>หมวดหมู่</label><select name="category">${CATS.map(c=>`<option value="${c.k}" ${p&&p.category===c.k?'selected':''}>${c.lb}</option>`).join('')}</select></div>
+      <div class="field"><label>จำนวนคงเหลือ</label><input name="stock" type="number" value="${p?p.stock:0}"></div>
+      <div class="field" style="grid-column:1/-1;"><label>สถานที่จัดเก็บ</label><input name="location" value="${p?p.location:''}"></div>
+      <div class="field" style="grid-column:1/-1;"><label>สถานะสินค้า</label><select name="status">${Object.entries(STATUS_META).map(([k,v])=>`<option value="${k}" ${p&&p.status===k?'selected':''}>${v.dot} ${v.label}</option>`).join('')}</select></div>
+    </div></form></div>
+    <div class="modal-foot"><button class="btn secondary" id="closeProdModal2">ยกเลิก</button><button class="btn" id="saveProdBtn">บันทึกสินค้า</button></div>
+  </div></div>`;
+}
+
+function pageOrders(){
+  return `
+  <div class="topbar"><div><h2>คำสั่งซื้อ</h2><div class="sub">รหัสคำสั่งซื้อที่เกิดขึ้นหลังลูกค้าชำระเงินสำเร็จบนหน้าเว็บ</div></div></div>
+  <div class="panel" style="padding:0;overflow-x:auto;"><table class="table" style="min-width:760px;">
+    <thead><tr><th>รหัสคำสั่งซื้อ</th><th>รายการสินค้า</th><th>ยอดรวม</th><th>วันที่สั่ง</th><th>สถานะ</th></tr></thead>
+    <tbody>${DB.orders.slice().reverse().map(o=>`<tr><td>${o.id}</td><td>${o.items.map(i=>`${i.name} ×${i.qty}`).join(', ')}</td><td>฿${fmt(o.total)}</td><td>${o.created}</td>
+      <td><select class="status-select orderStatusSelect" data-id="${o.id}">${['รอดำเนินการ','กำลังเตรียมสินค้า','พร้อมรับที่สาขา','จัดส่งแล้ว','เสร็จสิ้น'].map(s=>`<option ${o.status===s?'selected':''}>${s}</option>`).join('')}</select></td>
+    </tr>`).join('') || `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;">ยังไม่มีคำสั่งซื้อ</td></tr>`}</tbody></table></div>`;
+}
+
+function pageReservations(){
+  return `
+  <div class="topbar"><div><h2>รายการจอง</h2><div class="sub">ยืนยัน/อัปเดตสถานะการจองสินค้าของลูกค้า</div></div></div>
+  <div class="panel" style="padding:0;overflow-x:auto;"><table class="table" style="min-width:800px;">
+    <thead><tr><th>เลขที่จอง</th><th>ลูกค้า</th><th>สินค้า</th><th>จำนวน</th><th>วันที่รับ</th><th>สถานะ</th></tr></thead>
+    <tbody>${DB.reservations.slice().reverse().map(r=>`<tr><td>${r.id}</td><td>${r.name}<br><span style="color:var(--muted);font-size:11px;">${r.phone}</span></td><td>${r.productName}</td><td>${r.qty}</td><td>${r.date}</td>
+      <td><select class="status-select resStatusSelect" data-id="${r.id}">${['รอตรวจสอบ','ยืนยันการจอง','เตรียมสินค้า','พร้อมรับสินค้า','รับสินค้าแล้ว'].map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('')}</select></td>
+    </tr>`).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">ยังไม่มีรายการจอง</td></tr>`}</tbody></table></div>`;
+}
+
+function pageChecks(){
+  return `
+  <div class="topbar"><div><h2>คำขอตรวจสอบสินค้า</h2><div class="sub">คำขอจากลูกค้าที่ให้เจ้าหน้าที่ช่วยตรวจสอบสินค้าที่ไม่พบในสาขา</div></div></div>
+  <div class="panel" style="padding:0;overflow-x:auto;"><table class="table" style="min-width:700px;">
+    <thead><tr><th>เลขที่</th><th>สินค้า</th><th>ลูกค้า</th><th>วันที่ขอ</th><th>สถานะ</th></tr></thead>
+    <tbody>${DB.checkRequests.slice().reverse().map(c=>`<tr><td>${c.id}</td><td>${c.product}</td><td>${c.name}<br><span style="color:var(--muted);font-size:11px;">${c.phone}</span></td><td>${c.created}</td>
+      <td><select class="status-select checkStatusSelect" data-id="${c.id}">${['รอตรวจสอบ','กำลังตรวจสอบ','ตรวจสอบแล้ว-พบสินค้า','ตรวจสอบแล้ว-ไม่พบสินค้า'].map(s=>`<option ${c.status===s?'selected':''}>${s}</option>`).join('')}</select></td>
+    </tr>`).join('') || `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;">ยังไม่มีคำขอ</td></tr>`}</tbody></table></div>`;
+}
+
+function pageLiveChat(){
+  const sessions = DB.chatSessions.slice().sort((a,b)=> (a.status==='queued'?0:1)-(b.status==='queued'?0:1) || new Date(a.createdAt)-new Date(b.createdAt));
+  return `
+  <div class="topbar"><div><h2>แชทสด (Live Chat)</h2><div class="sub">คิวการสนทนาจากลูกค้าที่ขอเชื่อมต่อเจ้าหน้าที่ — ตอบกลับได้แบบเรียลไทม์</div></div>
+    <button class="btn secondary" id="refreshChat">🔄 รีเฟรช</button></div>
+  <div class="chat-queue-list">
+    ${sessions.map(s=>`
+    <div class="cq-item ${s.status} ${admin.openChatId===s.id?'open':''}" data-cqid="${s.id}">
+      <div class="cq-head" data-cqtoggle="${s.id}">
+        <div><div class="nm">${s.customerName}</div><div class="meta">เริ่ม ${new Date(s.createdAt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})} · ${s.messages.length} ข้อความ</div></div>
+        <span class="mini-badge" style="background:${s.status==='queued'?'var(--gold-bg)':s.status==='active'?'var(--ok-bg)':'var(--other-bg)'};color:${s.status==='queued'?'var(--gold-deep)':s.status==='active'?'var(--ok)':'var(--other)'}">${s.status==='queued'?'⏳ รอในคิว':s.status==='active'?'🟢 กำลังสนทนา':'⚪ ปิดแล้ว'}</span>
+      </div>
+      <div class="cq-thread">
+        <div class="cq-messages" id="cqmsgs-${s.id}">
+          ${s.messages.map(m=> m.from==='system' ? `<div class="cq-msg system">${m.text}</div>` : `<div class="cq-msg ${m.from}">${m.text}</div>`).join('')}
+        </div>
+        ${s.status!=='closed' ? `
+        <div class="cq-reply"><input type="text" placeholder="พิมพ์ข้อความตอบลูกค้า..." data-cqinput="${s.id}"><button data-cqsend="${s.id}">ส่ง</button></div>
+        <div class="cq-actions"><button class="btn secondary" style="padding:8px 14px;font-size:11.5px;" data-cqclose="${s.id}">ปิดการสนทนา</button></div>
+        ` : ''}
+      </div>
+    </div>`).join('') || `<div class="panel" style="text-align:center;color:var(--muted);">ยังไม่มีลูกค้าติดต่อเข้ามา</div>`}
+  </div>`;
+}
+
+function pageTickets(){
+  return `
+  <div class="topbar"><div><h2>คำร้องลูกค้า</h2><div class="sub">ข้อความจากฟอร์มติดต่อเจ้าหน้าที่</div></div></div>
+  <div class="panel" style="padding:0;overflow-x:auto;"><table class="table" style="min-width:760px;">
+    <thead><tr><th>เลขที่</th><th>ลูกค้า</th><th>หัวข้อ</th><th>รายละเอียด</th><th>สถานะ</th></tr></thead>
+    <tbody>${DB.tickets.slice().reverse().map(t=>`<tr><td>${t.id}</td><td>${t.name}<br><span style="color:var(--muted);font-size:11px;">${t.phone}</span></td><td>${t.topic}</td><td style="max-width:220px;">${t.detail}</td>
+      <td><select class="status-select tickStatusSelect" data-id="${t.id}">${['รอดำเนินการ','กำลังตรวจสอบ','เจ้าหน้าที่ตอบกลับแล้ว','ปิดเรื่อง'].map(s=>`<option ${t.status===s?'selected':''}>${s}</option>`).join('')}</select></td>
+    </tr>`).join('') || `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;">ยังไม่มีคำร้อง</td></tr>`}</tbody></table></div>`;
+}
+
+function pageChatbot(){
+  return `
+  <div class="topbar"><div><h2>ประวัติ Chatbot</h2><div class="sub">บทสนทนาและผลลัพธ์ของ Chatbot อัตโนมัติ (ไม่รวมแชทสด)</div></div></div>
+  <div class="panel" style="padding:0;overflow-x:auto;"><table class="table" style="min-width:600px;">
+    <thead><tr><th>เลขที่</th><th>เวลา</th><th>หัวข้อ</th><th>ผลลัพธ์</th></tr></thead>
+    <tbody>${DB.chatlogs.slice().reverse().map(c=>`<tr><td>${c.id}</td><td>${c.time}</td><td>${c.topic}</td><td>${c.outcome}</td></tr>`).join('') || `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px;">ยังไม่มีประวัติ</td></tr>`}</tbody></table></div>`;
+}
+
+function pageMonitoring(){
+  const s=DB.systemStatus; const hours=['10','11','12','13','14','15','16','17','18','19','20']; const loads=[20,26,30,42,38,55,72,88,95,80,44];
+  return `
+  <div class="topbar"><div><h2>System Monitoring</h2><div class="sub">ตรวจสอบสถานะระบบและภาระงาน โดยเฉพาะช่วง 16:00–20:00 น. ที่เคยเกิดปัญหา</div></div><button class="btn secondary" id="refreshMonitor">🔄 รีเฟรชสถานะ</button></div>
+  <div class="status-pulse-grid">
+    <div class="pulse-card"><div class="pv">${s.level==='ok'?'🟢 ปกติ':s.level==='warn'?'🟡 ทำงานหนัก':'🔴 มีปัญหา'}</div><div class="pl">สถานะ Server</div></div>
+    <div class="pulse-card"><div class="pv">${s.users}</div><div class="pl">ผู้ใช้งานออนไลน์</div><div class="pbar"><i style="width:${Math.min(100,s.users)}%"></i></div></div>
+    <div class="pulse-card"><div class="pv">${s.requests}</div><div class="pl">Request ต่อนาที</div><div class="pbar"><i style="width:${Math.min(100,s.requests/5)}%"></i></div></div>
+    <div class="pulse-card"><div class="pv">${s.resp}ms</div><div class="pl">Response Time เฉลี่ย</div><div class="pbar"><i style="width:${Math.min(100,s.resp/6)}%"></i></div></div>
+  </div>
+  <div class="grid2">
+    <div class="panel"><h4>ปริมาณการใช้งานรายชั่วโมง</h4><div class="bar-chart">${loads.map(v=>`<div class="bar ${v>=70?'peak':''}" style="height:${v}%"></div>`).join('')}</div>
+      <div class="bar-chart-labels">${hours.map(h=>`<span>${h}:00</span>`).join('')}</div>
+      <div style="font-size:11.5px;color:var(--warn);margin-top:11px;">⚠️ ช่วง 16:00–19:00 มีภาระงานสูงสุด — ระบบ Queue จะเริ่มทำงานอัตโนมัติเมื่อ Request เกินเกณฑ์</div></div>
+    <div class="panel"><h4>มาตรการป้องกันระบบค้าง</h4>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:12.5px;">
+        <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f2f5fa;"><span>🧵 Queue System</span><span class="mini-badge" style="background:${STMAP.instock};color:${STCOLOR.instock}">เปิดใช้งาน</span></div>
+        <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f2f5fa;"><span>🔔 Notification แจ้งเตือนผู้ดูแล</span><span class="mini-badge" style="background:${STMAP.instock};color:${STCOLOR.instock}">เปิดใช้งาน</span></div>
+        <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f2f5fa;"><span>💾 Backup ข้อมูลอัตโนมัติ</span><span class="mini-badge" style="background:${STMAP.instock};color:${STCOLOR.instock}">ทุก 6 ชม.</span></div>
+        <div style="display:flex;justify-content:space-between;padding:9px 0;"><span>📉 โหลดข้อมูลแบบแบ่งหน้า</span><span class="mini-badge" style="background:${STMAP.instock};color:${STCOLOR.instock}">เปิดใช้งาน</span></div>
+      </div></div>
+  </div>`;
+}
+
+function pageErrorlog(){
+  return `
+  <div class="topbar"><div><h2>Error Log</h2><div class="sub">บันทึกข้อผิดพลาดของระบบเพื่อการตรวจสอบและแก้ไข</div></div></div>
+  <div class="panel" style="padding:0;overflow-x:auto;"><table class="table" style="min-width:800px;">
+    <thead><tr><th>เลขที่</th><th>เวลา</th><th>ผู้ใช้งาน</th><th>หน้าที่เกิด</th><th>ประเภท</th><th>รายละเอียด</th><th>สถานะ</th></tr></thead>
+    <tbody>${DB.errorlogs.slice().reverse().map(e=>`<tr><td>${e.id}</td><td>${e.time}</td><td>${e.user}</td><td>${e.page}</td><td>${e.type}</td><td style="max-width:200px;">${e.detail}</td>
+      <td><span class="mini-badge" style="background:${e.status==='แก้ไขแล้ว'?STMAP.instock:STMAP.incoming};color:${e.status==='แก้ไขแล้ว'?STCOLOR.instock:STCOLOR.incoming}">${e.status}</span></td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function pageSettings(){
+  return `
+  <div class="topbar"><div><h2>ตั้งค่าระบบ</h2><div class="sub">ข้อมูลพื้นฐานของสาขาและระบบ</div></div></div>
+  <div class="panel"><div class="form-grid">
+    <div class="field"><label>ชื่อสาขา</label><input value="Advice สาขาตรัง" disabled></div>
+    <div class="field"><label>ที่ตั้ง</label><input value="ข้างห้างโรบินสัน ตรัง" disabled></div>
+    <div class="field"><label>เวลาเปิดทำการ</label><input value="09:00 – 18:00 น." disabled></div>
+    <div class="field"><label>ค่าบริการตรวจสอบด้วยรหัสสินค้า</label><input value="฿10 ต่อครั้ง" disabled></div>
+  </div><div style="font-size:11.5px;color:var(--muted);margin-top:18px;">* หน้าตั้งค่านี้เป็นตัวอย่างสำหรับต้นแบบระบบ (Prototype) เท่านั้น</div></div>`;
+}
+
+function updateQueueBadge(){ /* re-render already reflects queue count in sidebar */ }
+
+function bindEvents(){
+  const loginForm=document.getElementById('loginForm');
+  if(loginForm) loginForm.onsubmit=(e)=>{ e.preventDefault(); const fd=new FormData(loginForm);
+    if(fd.get('user')==='admin' && fd.get('pass')==='admin123'){ loggedIn=true; render(); }
+    else document.getElementById('loginErr').style.display='block';
+  };
+  const logoutBtn=document.getElementById('logoutBtn'); if(logoutBtn) logoutBtn.onclick=()=>{loggedIn=false; admin.page='dashboard'; render();};
+  document.querySelectorAll('[data-apage]').forEach(el=>el.onclick=()=>{admin.page=el.dataset.apage; render();});
+
+  const addBtn=document.getElementById('addProductBtn'); if(addBtn) addBtn.onclick=()=>{admin.editingProduct=null; admin.showProductModal=true; render();};
+  document.querySelectorAll('[data-editprod]').forEach(el=>el.onclick=()=>{admin.editingProduct=DB.products.find(p=>p.id===el.dataset.editprod); admin.showProductModal=true; render();});
+  document.querySelectorAll('[data-delprod]').forEach(el=>el.onclick=async()=>{DB.products=DB.products.filter(p=>p.id!==el.dataset.delprod); await saveDB(); toast('ลบสินค้าแล้ว'); render();});
+  const closeProdModal=document.getElementById('closeProdModal'); if(closeProdModal) closeProdModal.onclick=()=>{admin.showProductModal=false; render();};
+  const closeProdModal2=document.getElementById('closeProdModal2'); if(closeProdModal2) closeProdModal2.onclick=()=>{admin.showProductModal=false; render();};
+  const saveProdBtn=document.getElementById('saveProdBtn');
+  if(saveProdBtn) saveProdBtn.onclick=async()=>{
+    const fd=new FormData(document.getElementById('prodForm'));
+    if(admin.editingProduct){ Object.assign(admin.editingProduct,{code:fd.get('code'),name:fd.get('name'),category:fd.get('category'),price:Number(fd.get('price')),stock:Number(fd.get('stock')),location:fd.get('location'),status:fd.get('status')}); }
+    else { DB.products.push({id:uid('P'), image:productImg(fd.get('code'),fd.get('category')), code:fd.get('code'), name:fd.get('name'), category:fd.get('category'), price:Number(fd.get('price')), stock:Number(fd.get('stock')), location:fd.get('location')||'-', status:fd.get('status')}); }
+    await saveDB(); admin.showProductModal=false; toast('บันทึกสินค้าเรียบร้อย'); render();
+  };
+  document.querySelectorAll('.statusSelect').forEach(el=>el.onchange=async()=>{const p=DB.products.find(x=>x.id===el.dataset.id); if(p){p.status=el.value; await saveDB(); toast('อัปเดตสถานะสินค้าแล้ว'); render();}});
+  const prodSearch=document.getElementById('prodSearch'); if(prodSearch){ prodSearch.oninput=()=>{admin.productSearch=prodSearch.value; render(); document.getElementById('prodSearch').focus();}; }
+
+  document.querySelectorAll('.orderStatusSelect').forEach(el=>el.onchange=async()=>{const o=DB.orders.find(x=>x.id===el.dataset.id); if(o){o.status=el.value; await saveDB(); toast('อัปเดตสถานะคำสั่งซื้อแล้ว'); render();}});
+  document.querySelectorAll('.resStatusSelect').forEach(el=>el.onchange=async()=>{const r=DB.reservations.find(x=>x.id===el.dataset.id); if(r){r.status=el.value; await saveDB(); toast('อัปเดตสถานะการจองแล้ว'); render();}});
+  document.querySelectorAll('.checkStatusSelect').forEach(el=>el.onchange=async()=>{const c=DB.checkRequests.find(x=>x.id===el.dataset.id); if(c){c.status=el.value; await saveDB(); toast('อัปเดตคำขอตรวจสอบแล้ว'); render();}});
+  document.querySelectorAll('.tickStatusSelect').forEach(el=>el.onchange=async()=>{const t=DB.tickets.find(x=>x.id===el.dataset.id); if(t){t.status=el.value; await saveDB(); toast('อัปเดตสถานะคำร้องแล้ว'); render();}});
+
+  const refreshMonitor=document.getElementById('refreshMonitor');
+  if(refreshMonitor) refreshMonitor.onclick=async()=>{DB.systemStatus.users=20+Math.floor(Math.random()*80); DB.systemStatus.requests=100+Math.floor(Math.random()*400); DB.systemStatus.resp=120+Math.floor(Math.random()*300); await saveDB(); toast('รีเฟรชสถานะระบบแล้ว'); render();};
+
+  // live chat
+  document.querySelectorAll('[data-cqtoggle]').forEach(el=>el.onclick=()=>{admin.openChatId = admin.openChatId===el.dataset.cqtoggle ? null : el.dataset.cqtoggle; render(); setTimeout(()=>{const m=document.getElementById('cqmsgs-'+admin.openChatId); if(m) m.scrollTop=m.scrollHeight;},30);});
+  document.querySelectorAll('[data-cqsend]').forEach(el=>el.onclick=()=>sendCqReply(el.dataset.cqsend));
+  document.querySelectorAll('[data-cqinput]').forEach(el=>el.onkeydown=(e)=>{ if(e.key==='Enter') sendCqReply(el.dataset.cqinput); });
+  document.querySelectorAll('[data-cqclose]').forEach(el=>el.onclick=async()=>{
+    const s=DB.chatSessions.find(x=>x.id===el.dataset.cqclose);
+    if(s){ s.status='closed'; s.messages.push({from:'system', text:'เจ้าหน้าที่ปิดการสนทนาแล้ว', time:nowTime()}); await saveDB(); toast('ปิดการสนทนาแล้ว'); render(); }
+  });
+  const refreshChat=document.getElementById('refreshChat'); if(refreshChat) refreshChat.onclick=async()=>{await loadDB(); render();};
+}
+
+async function sendCqReply(sid){
+  const input = document.querySelector(`[data-cqinput="${sid}"]`);
+  if(!input) return;
+  const v = input.value.trim(); if(!v) return;
+  const s = DB.chatSessions.find(x=>x.id===sid);
+  if(!s) return;
+  s.status='active';
+  s.messages.push({from:'staff', text:v, time:nowTime()});
+  await saveDB();
+  admin.openChatId = sid;
+  render();
+  setTimeout(()=>{const m=document.getElementById('cqmsgs-'+sid); if(m) m.scrollTop=m.scrollHeight; const i=document.querySelector(`[data-cqinput="${sid}"]`); if(i) i.focus();},30);
+}
+
+// live poll for new customer messages / queue changes while on the live chat page
+setInterval(async ()=>{
+  if(loggedIn && admin.page==='livechat'){
+    const before = JSON.stringify(DB.chatSessions);
+    await loadDB();
+    const after = JSON.stringify(DB.chatSessions);
+    if(before!==after) render();
+  } else if(loggedIn){
+    await loadDB(); // keep KPIs / queue badge fresh in background
+  }
+}, 4000);
+
+(async function init(){ await loadDB(); render(); })();
+</script>
+</body>
+</html>
