@@ -140,6 +140,45 @@ img{display:block;object-fit:cover;}
 .modal-foot{padding:17px 26px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;}
 
+
+/* ===== sales reports ===== */
+.report-filter{display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-bottom:18px;}
+.report-tabs{display:flex;gap:6px;flex-wrap:wrap;}
+.report-tabs button{background:#fff;border:1px solid var(--line);color:var(--muted);padding:9px 15px;border-radius:10px;font-weight:700;font-size:12px;}
+.report-tabs button.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+.report-date{display:flex;gap:7px;align-items:center;}
+.report-date input{padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:12px;color:var(--ink);}
+.report-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:18px;}
+.report-kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow);}
+.report-kpi .rv{font-family:'Kanit';font-size:23px;font-weight:800;color:var(--navy);margin-top:3px;}
+.report-kpi .rl{font-size:11.5px;color:var(--muted);}
+.report-kpi .ri{font-size:18px;}
+.report-grid{display:grid;grid-template-columns:1.35fr .9fr;gap:16px;margin-bottom:18px;}
+.report-chart{height:245px;display:flex;align-items:flex-end;gap:8px;padding:20px 5px 0;}
+.report-bar-wrap{height:100%;flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;min-width:0;}
+.report-bar{width:min(34px,80%);min-height:3px;background:linear-gradient(180deg,var(--cyan),var(--blue));border-radius:7px 7px 2px 2px;position:relative;}
+.report-bar:hover{filter:brightness(.95);}
+.report-bar .tip{position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:4px 7px;border-radius:6px;font-size:9px;white-space:nowrap;display:none;z-index:3;}
+.report-bar:hover .tip{display:block;}
+.report-bar-label{font-size:9px;color:var(--muted);margin-top:7px;max-width:55px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.report-list{display:flex;flex-direction:column;gap:10px;}
+.report-rank{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #eef3fb;}
+.report-rank:last-child{border-bottom:0;}
+.report-rank .num{width:27px;height:27px;border-radius:8px;background:var(--sky);color:var(--blue-deep);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;}
+.report-rank .rn{flex:1;font-size:12.5px;font-weight:700;color:var(--ink);}
+.report-rank .rq{font-size:11px;color:var(--muted);text-align:right;}
+.report-rank .rm{font-size:12px;color:var(--blue-deep);font-weight:800;text-align:right;}
+.report-empty{text-align:center;color:var(--muted);padding:35px 10px;font-size:12.5px;}
+.report-actions{display:flex;gap:8px;flex-wrap:wrap;}
+@media(max-width:980px){
+  .report-kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .report-grid{grid-template-columns:1fr;}
+}
+@media(max-width:600px){
+  .report-kpi-grid{grid-template-columns:1fr 1fr;}
+  .report-date{width:100%;}
+}
+
 @media(max-width:980px){
   .shell{grid-template-columns:1fr;}
   .sidebar{display:none;}
@@ -147,6 +186,16 @@ img{display:block;object-fit:cover;}
   .status-pulse-grid{grid-template-columns:repeat(2,1fr);}
   .grid2{grid-template-columns:1fr;}
   .login-visual{display:none;}
+}
+</style>
+<style id="printReportStyle">
+@media print{
+  .conn-strip,.sidebar,.topbar .report-actions,.report-filter .report-tabs,.report-date,.toast{display:none!important;}
+  .shell{display:block!important;min-height:auto!important;}
+  .main{padding:0!important;}
+  .panel,.report-kpi{box-shadow:none!important;break-inside:avoid;}
+  .report-grid{grid-template-columns:1.2fr 1fr!important;}
+  body{background:#fff!important;}
 }
 </style>
 </head>
@@ -269,7 +318,7 @@ function nowTime(){ const d=new Date(); return d.getHours().toString().padStart(
 window.addEventListener('storage', (e)=>{ if(e.key===KEY){ loadDBSync(); render(); } });
 
 let loggedIn=false;
-let admin = { page:'dashboard', productSearch:'', editingProduct:null, showProductModal:false, openChatId:null };
+let admin = { page:'dashboard', productSearch:'', editingProduct:null, showProductModal:false, openChatId:null, reportMode:'month', reportFrom:'', reportTo:'' };
 function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2600); }
 
 function render(){
@@ -309,7 +358,7 @@ function renderLogin(){
 function renderShell(){
   const queued = DB.chatSessions.filter(s=>s.status==='queued').length;
   const menu = [
-    {grp:'ภาพรวม'},{k:'dashboard',ic:'📊',l:'Dashboard'},
+    {grp:'ภาพรวม'},{k:'dashboard',ic:'📊',l:'Dashboard'},{k:'reports',ic:'📈',l:'รายงานและวิเคราะห์ข้อมูล'},
     {grp:'สินค้า & คำสั่งซื้อ'},{k:'products',ic:'📦',l:'สินค้า'},{k:'orders',ic:'🧾',l:'คำสั่งซื้อ'},
     {k:'reservations',ic:'📌',l:'รายการจอง'},{k:'checks',ic:'🔎',l:'คำขอตรวจสอบสินค้า'},
     {grp:'ลูกค้าสัมพันธ์'},{k:'livechat',ic:'💬',l:'แชทสด',badge:queued},{k:'tickets',ic:'📨',l:'คำร้องลูกค้า'},{k:'chatbot',ic:'🤖',l:'ประวัติ Chatbot'},
@@ -317,6 +366,7 @@ function renderShell(){
   ];
   let body='';
   if(admin.page==='dashboard') body=pageDashboard();
+  else if(admin.page==='reports') body=pageReports();
   else if(admin.page==='products') body=pageProducts();
   else if(admin.page==='orders') body=pageOrders();
   else if(admin.page==='reservations') body=pageReservations();
@@ -375,6 +425,138 @@ function pageDashboard(){
     <table class="table"><thead><tr><th>รหัสคำสั่งซื้อ</th><th>รายการ</th><th>ยอดรวม</th><th>วันที่</th><th>สถานะ</th></tr></thead>
     <tbody>${DB.orders.slice(-5).reverse().map(o=>`<tr><td>${o.id}</td><td>${o.items.map(i=>i.name).join(', ')}</td><td>฿${fmt(o.total)}</td><td>${o.created}</td><td>${resBadge(o.status)}</td></tr>`).join('') || `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">ยังไม่มีคำสั่งซื้อ</td></tr>`}</tbody></table></div>
   `;
+}
+
+
+function reportDateValue(o){
+  if(!o || !o.created) return '';
+  const m=String(o.created).match(/(\d{4}-\d{2}-\d{2})/);
+  return m ? m[1] : '';
+}
+function reportDateLabel(d,mode){
+  if(mode==='day') return d.slice(8,10)+'/'+d.slice(5,7);
+  if(mode==='week') return d.slice(8,10)+'/'+d.slice(5,7);
+  return d.slice(5,7)+'/'+d.slice(0,4);
+}
+function reportRange(mode,from,to){
+  const now=new Date();
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  let a,b;
+  if(mode==='custom' && from && to){ a=new Date(from+'T00:00:00'); b=new Date(to+'T23:59:59'); }
+  else if(mode==='day'){ a=today; b=new Date(today.getTime()+86400000-1); }
+  else if(mode==='week'){
+    const day=today.getDay();
+    const diff=day===0?6:day-1;
+    a=new Date(today); a.setDate(today.getDate()-diff);
+    b=new Date(a); b.setDate(a.getDate()+6); b.setHours(23,59,59,999);
+  } else {
+    a=new Date(today.getFullYear(),today.getMonth(),1);
+    b=new Date(today.getFullYear(),today.getMonth()+1,0,23,59,59);
+  }
+  return {a,b,from:a.toISOString().slice(0,10),to:b.toISOString().slice(0,10)};
+}
+function reportData(){
+  const mode=admin.reportMode||'month';
+  const range=reportRange(mode,admin.reportFrom,admin.reportTo);
+  const orders=DB.orders.filter(o=>{
+    const d=reportDateValue(o);
+    if(!d) return false;
+    const x=new Date(d+'T12:00:00');
+    return x>=range.a && x<=range.b && o.status!=='ยกเลิก';
+  });
+  const total=orders.reduce((sum,o)=>sum+Number(o.total||0),0);
+  const qty=orders.reduce((sum,o)=>sum+(o.items||[]).reduce((n,i)=>n+Number(i.qty||0),0),0);
+  const byProduct={};
+  orders.forEach(o=>(o.items||[]).forEach(i=>{
+    const key=i.code||i.name||'ไม่ระบุ';
+    if(!byProduct[key]) byProduct[key]={name:i.name||key,qty:0,sales:0};
+    byProduct[key].qty+=Number(i.qty||0);
+    byProduct[key].sales+=Number(i.qty||0)*Number(i.price||0);
+  }));
+  let labels=[], values=[];
+  if(mode==='day'){
+    labels=['วันนี้']; values=[total];
+  }else if(mode==='week'){
+    for(let i=0;i<7;i++){
+      const d=new Date(range.a); d.setDate(range.a.getDate()+i);
+      const key=d.toISOString().slice(0,10);
+      labels.push(key); values.push(orders.filter(o=>reportDateValue(o)===key).reduce((s,o)=>s+Number(o.total||0),0));
+    }
+  }else if(mode==='month'){
+    const days=new Date(range.a.getFullYear(),range.a.getMonth()+1,0).getDate();
+    for(let i=1;i<=days;i++){
+      const key=range.from.slice(0,8)+String(i).padStart(2,'0');
+      labels.push(key); values.push(orders.filter(o=>reportDateValue(o)===key).reduce((s,o)=>s+Number(o.total||0),0));
+    }
+  }else{
+    const cur=new Date(range.a.getFullYear(),range.a.getMonth(),1);
+    while(cur<=range.b){
+      const y=cur.getFullYear(),m=cur.getMonth();
+      const val=orders.filter(o=>{const d=new Date(reportDateValue(o)+'T12:00:00');return d.getFullYear()===y&&d.getMonth()===m;}).reduce((s,o)=>s+Number(o.total||0),0);
+      labels.push(String(m+1).padStart(2,'0')+'/'+y); values.push(val);
+      cur.setMonth(cur.getMonth()+1);
+    }
+  }
+  return {mode,range,orders,total,qty,byProduct,labels,values};
+}
+function reportModeLabel(mode){
+  return {day:'รายวัน',week:'รายสัปดาห์',month:'รายเดือน',year:'รายปี',custom:'กำหนดช่วงเวลา'}[mode]||'รายเดือน';
+}
+function pageReports(){
+  const d=reportData();
+  const max=Math.max(...d.values,1);
+  const top=Object.values(d.byProduct).sort((a,b)=>b.qty-a.qty).slice(0,5);
+  const avg=d.orders.length?d.total/d.orders.length:0;
+  const chartLabels=d.labels.map((x,i)=>{
+    if(d.mode==='month' && d.labels.length>15 && i%Math.ceil(d.labels.length/10)!==0) return '';
+    if(d.mode==='week') return reportDateLabel(x,d.mode);
+    return d.mode==='day'?'วันนี้':x;
+  });
+  return `
+  <div class="topbar">
+    <div><h2>📈 รายงานและวิเคราะห์ข้อมูล</h2><div class="sub">สรุปยอดขายจากคำสั่งซื้อในระบบแบบรายวัน รายสัปดาห์ และรายเดือน</div></div>
+    <div class="report-actions"><button class="btn secondary" id="printReport">🖨️ พิมพ์รายงาน</button><button class="btn" id="exportReport">⬇️ Export CSV</button></div>
+  </div>
+
+  <div class="panel" style="margin-bottom:18px;">
+    <div class="report-filter">
+      <div>
+        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px;">ช่วงเวลารายงาน</div>
+        <div class="report-tabs">
+          ${[['day','รายวัน'],['week','รายสัปดาห์'],['month','รายเดือน'],['year','รายปี'],['custom','กำหนดเอง']].map(([k,l])=>`<button data-report-mode="${k}" class="${d.mode===k?'active':''}">${l}</button>`).join('')}
+        </div>
+      </div>
+      ${d.mode==='custom'?`<div class="report-date"><div><div style="font-size:10px;color:var(--muted);margin-bottom:4px;">เริ่มต้น</div><input id="reportFrom" type="date" value="${admin.reportFrom||d.range.from}"></div><div><div style="font-size:10px;color:var(--muted);margin-bottom:4px;">สิ้นสุด</div><input id="reportTo" type="date" value="${admin.reportTo||d.range.to}"></div><button class="btn" id="applyReport">แสดงรายงาน</button></div>`:''}
+    </div>
+    <div style="font-size:11.5px;color:var(--muted);">ข้อมูลช่วง: <b style="color:var(--ink);">${d.range.from}</b> ถึง <b style="color:var(--ink);">${d.range.to}</b> · ${d.orders.length} คำสั่งซื้อ</div>
+  </div>
+
+  <div class="report-kpi-grid">
+    <div class="report-kpi"><div class="ri">💰</div><div class="rv">฿${fmt(d.total)}</div><div class="rl">ยอดขายรวม ${reportModeLabel(d.mode)}</div></div>
+    <div class="report-kpi"><div class="ri">🧾</div><div class="rv">${fmt(d.orders.length)}</div><div class="rl">จำนวนคำสั่งซื้อ</div></div>
+    <div class="report-kpi"><div class="ri">📦</div><div class="rv">${fmt(d.qty)}</div><div class="rl">จำนวนสินค้าที่ขาย</div></div>
+    <div class="report-kpi"><div class="ri">🛒</div><div class="rv">฿${fmt(Math.round(avg))}</div><div class="rl">ยอดขายเฉลี่ยต่อคำสั่งซื้อ</div></div>
+  </div>
+
+  <div class="report-grid">
+    <div class="panel">
+      <h4>กราฟยอดขาย ${reportModeLabel(d.mode)} <span style="font-size:10px;color:var(--muted);font-family:inherit;">หน่วย: บาท</span></h4>
+      ${d.orders.length||d.total?`<div class="report-chart">${d.values.map((v,i)=>`<div class="report-bar-wrap"><div class="report-bar" style="height:${Math.max(2,(v/max)*100)}%"><span class="tip">฿${fmt(v)}</span></div><div class="report-bar-label">${chartLabels[i]}</div></div>`).join('')}</div>`:`<div class="report-empty">ยังไม่มีข้อมูลยอดขายในช่วงเวลานี้</div>`}
+    </div>
+    <div class="panel">
+      <h4>🏆 สินค้าขายดี</h4>
+      ${top.length?`<div class="report-list">${top.map((x,i)=>`<div class="report-rank"><div class="num">${i+1}</div><div class="rn">${x.name}</div><div><div class="rq">${fmt(x.qty)} ชิ้น</div><div class="rm">฿${fmt(x.sales)}</div></div></div>`).join('')}</div>`:`<div class="report-empty">ยังไม่มีข้อมูลสินค้า</div>`}
+    </div>
+  </div>
+
+  <div class="panel">
+    <h4>รายละเอียดคำสั่งซื้อในช่วงที่เลือก <span style="font-size:11px;color:var(--muted);font-family:inherit;">รวม ฿${fmt(d.total)}</span></h4>
+    <div style="overflow-x:auto;">
+      <table class="table" style="min-width:720px;"><thead><tr><th>รหัสคำสั่งซื้อ</th><th>วันที่</th><th>รายการสินค้า</th><th>จำนวน</th><th>ยอดขาย</th><th>สถานะ</th></tr></thead>
+      <tbody>${d.orders.slice().reverse().map(o=>`<tr><td>${o.id}</td><td>${reportDateValue(o)}</td><td>${(o.items||[]).map(i=>`${i.name} ×${i.qty}`).join(', ')}</td><td>${(o.items||[]).reduce((n,i)=>n+Number(i.qty||0),0)}</td><td><b>฿${fmt(o.total)}</b></td><td>${resBadge(o.status)}</td></tr>`).join('')||`<tr><td colspan="6" class="report-empty">ยังไม่มีคำสั่งซื้อในช่วงเวลาที่เลือก</td></tr>`}</tbody>
+      </table>
+    </div>
+  </div>`;
 }
 
 function pageProducts(){
@@ -536,6 +718,32 @@ function bindEvents(){
   };
   const logoutBtn=document.getElementById('logoutBtn'); if(logoutBtn) logoutBtn.onclick=()=>{loggedIn=false; admin.page='dashboard'; render();};
   document.querySelectorAll('[data-apage]').forEach(el=>el.onclick=()=>{admin.page=el.dataset.apage; render();});
+  document.querySelectorAll('[data-report-mode]').forEach(el=>el.onclick=()=>{
+    admin.reportMode=el.dataset.reportMode;
+    if(admin.reportMode!=='custom'){admin.reportFrom='';admin.reportTo='';}
+    render();
+  });
+  const applyReport=document.getElementById('applyReport');
+  if(applyReport) applyReport.onclick=()=>{
+    admin.reportFrom=document.getElementById('reportFrom').value;
+    admin.reportTo=document.getElementById('reportTo').value;
+    if(!admin.reportFrom||!admin.reportTo){toast('กรุณาเลือกวันที่ให้ครบ');return;}
+    if(admin.reportFrom>admin.reportTo){toast('วันที่เริ่มต้นต้องไม่เกินวันที่สิ้นสุด');return;}
+    render();
+  };
+  const printReport=document.getElementById('printReport');
+  if(printReport) printReport.onclick=()=>window.print();
+  const exportReport=document.getElementById('exportReport');
+  if(exportReport) exportReport.onclick=()=>{
+    const d=reportData();
+    const rows=[['รหัสคำสั่งซื้อ','วันที่','รายการสินค้า','จำนวนสินค้า','ยอดขาย','สถานะ']];
+    d.orders.forEach(o=>rows.push([o.id,reportDateValue(o),(o.items||[]).map(i=>`${i.name} x${i.qty}`).join(' | '),(o.items||[]).reduce((n,i)=>n+Number(i.qty||0),0),Number(o.total||0),o.status]));
+    const csv='\uFEFF'+rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`sales-report-${d.range.from}-to-${d.range.to}.csv`; a.click(); URL.revokeObjectURL(a.href);
+    toast('ส่งออกไฟล์รายงานแล้ว');
+  };
+
 
   const addBtn=document.getElementById('addProductBtn'); if(addBtn) addBtn.onclick=()=>{admin.editingProduct=null; admin.showProductModal=true; render();};
   document.querySelectorAll('[data-editprod]').forEach(el=>el.onclick=()=>{admin.editingProduct=DB.products.find(p=>p.id===el.dataset.editprod); admin.showProductModal=true; render();});
