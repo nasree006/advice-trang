@@ -332,11 +332,20 @@ function nowTime(){ const d=new Date(); return d.getHours().toString().padStart(
 // real-time sync across the two separate HTML files (same browser, same folder / origin)
 window.addEventListener('storage', (e)=>{ if(e.key===KEY){ loadDBSync(); render(); } });
 
+const AUTH_KEY='advice_trang_admin_auth_v1';
 let loggedIn=false;
 let admin = { page:'dashboard', productSearch:'', editingProduct:null, showProductModal:false, pendingProductImage:'', openChatId:null, reportMode:'month', reportFrom:'', reportTo:'' };
 function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2600); }
 
+async function hashText(text){
+  const data=new TextEncoder().encode(text);
+  const hash=await crypto.subtle.digest('SHA-256',data);
+  return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function getAuth(){ return {user:'admin',hash:'240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9'}; }
+
 function render(){
+  const auth=getAuth();
   document.getElementById('root').innerHTML = loggedIn ? renderShell() : renderLogin();
   bindEvents();
   if(loggedIn) updateQueueBadge();
@@ -350,7 +359,7 @@ function renderLogin(){
       <div class="scrim"></div>
       <div class="content">
         <h2>ศูนย์ควบคุมสาขา<br/>Advice Trang Smart Service</h2>
-        <p>บริหารสินค้า คำสั่งซื้อ การจอง และแชทลูกค้าแบบเรียลไทม์ — ข้อมูลเชื่อมต่อกับหน้าเว็บลูกค้าโดยตรง</p>
+        <p>ระบบจัดการหลังบ้านสำหรับพนักงานและผู้ดูแลระบบ Advice สาขาตรัง</p>
       </div>
     </div>
     <div class="login-form-side">
@@ -359,12 +368,12 @@ function renderLogin(){
         <h3>เข้าสู่ระบบหลังบ้าน</h3>
         <p>สำหรับพนักงาน / ผู้จัดการสาขา / ผู้ดูแลระบบ Advice สาขาตรัง</p>
         <form id="loginForm">
-          <div class="field" style="margin-bottom:14px;"><label>ชื่อผู้ใช้งาน</label><input name="user" value="admin" required></div>
-          <div class="field"><label>รหัสผ่าน</label><input name="pass" type="password" value="admin123" required></div>
+          <div class="field" style="margin-bottom:14px;"><label>ชื่อผู้ใช้งาน</label><input name="user" autocomplete="username" placeholder="กรอกชื่อผู้ใช้งาน" required></div>
+          <div class="field"><label>รหัสผ่าน</label><input name="pass" type="password" autocomplete="current-password" placeholder="กรอกรหัสผ่าน" required></div>
           <div class="err-text" id="loginErr">ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง</div>
           <button class="btn-primary-lg" type="submit">เข้าสู่ระบบ</button>
         </form>
-        <div class="login-hint">🔐 ตัวอย่างระบบ: user <b>admin</b> / pass <b>admin123</b><br>ข้อมูลสินค้า/การจอง/คำสั่งซื้อ/แชท เชื่อมกับหน้าบ้านลูกค้าแบบเรียลไทม์</div>
+        <div class="login-hint">🔒 บัญชีผู้ดูแลระบบกำหนดโดยผู้จัดทำระบบ</div>
       </div>
     </div>
   </div>`;
@@ -725,23 +734,26 @@ function pageErrorlog(){
 
 function pageSettings(){
   return `
-  <div class="topbar"><div><h2>ตั้งค่าระบบ</h2><div class="sub">ข้อมูลพื้นฐานของสาขาและระบบ</div></div></div>
-  <div class="panel"><div class="form-grid">
+  <div class="topbar"><div><h2>ตั้งค่าระบบ</h2><div class="sub">ข้อมูลพื้นฐานของสาขาและบัญชีผู้ดูแลระบบ</div></div></div>
+  <div class="panel" style="margin-bottom:16px;"><div class="section-title" style="margin-bottom:14px;">🔐 บัญชีผู้ดูแลระบบ</div><div style="font-size:12px;color:var(--muted);line-height:1.8;">บัญชีผู้ดูแลระบบถูกกำหนดไว้สำหรับผู้จัดทำระบบ และจะไม่แสดงรหัสผ่านบนหน้าจัดการ</div></div>
+  <div class="panel"><div class="section-title" style="margin-bottom:14px;">🏢 ข้อมูลสาขา</div><div class="form-grid">
     <div class="field"><label>ชื่อสาขา</label><input value="Advice สาขาตรัง" disabled></div>
     <div class="field"><label>ที่ตั้ง</label><input value="ข้างห้างโรบินสัน ตรัง" disabled></div>
     <div class="field"><label>เวลาเปิดทำการ</label><input value="09:00 – 18:00 น." disabled></div>
     <div class="field"><label>ค่าบริการตรวจสอบด้วยรหัสสินค้า</label><input value="฿10 ต่อครั้ง" disabled></div>
-  </div><div style="font-size:11.5px;color:var(--muted);margin-top:18px;">* หน้าตั้งค่านี้เป็นตัวอย่างสำหรับต้นแบบระบบ (Prototype) เท่านั้น</div></div>`;
+  </div></div>`;
 }
 
 function updateQueueBadge(){ /* re-render already reflects queue count in sidebar */ }
 
 function bindEvents(){
   const loginForm=document.getElementById('loginForm');
-  if(loginForm) loginForm.onsubmit=(e)=>{ e.preventDefault(); const fd=new FormData(loginForm);
-    if(fd.get('user')==='admin' && fd.get('pass')==='admin123'){ loggedIn=true; render(); }
+  if(loginForm) loginForm.onsubmit=async(e)=>{ e.preventDefault(); const fd=new FormData(loginForm);
+    const auth=getAuth(); const user=String(fd.get('user')||'').trim(); const pass=String(fd.get('pass')||'');
+    if(auth && user===auth.user && await hashText(pass)===auth.hash){ loggedIn=true; render(); }
     else document.getElementById('loginErr').style.display='block';
   };
+
   const logoutBtn=document.getElementById('logoutBtn'); if(logoutBtn) logoutBtn.onclick=()=>{loggedIn=false; admin.page='dashboard'; render();};
   document.querySelectorAll('[data-apage]').forEach(el=>el.onclick=()=>{admin.page=el.dataset.apage; render();});
   document.querySelectorAll('[data-report-mode]').forEach(el=>el.onclick=()=>{
